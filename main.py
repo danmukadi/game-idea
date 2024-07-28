@@ -9,6 +9,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600 
 SCREEN_TITLE = "Meribia"
 MOVEMENT_SPEED = 5 
+SPRITE_SCALING_ENEMY = 0.5
 
 class Player(arcade.Sprite):
     '''Player Class'''
@@ -30,6 +31,9 @@ class Player(arcade.Sprite):
         elif self.top > SCREEN_HEIGHT - 1:
             self.top = SCREEN_HEIGHT - 1
 
+
+
+
 class MyGame(arcade.Window):
     """
     Main application
@@ -44,18 +48,29 @@ class MyGame(arcade.Window):
 
         #player info
         self.player_sprite = None
+        self.npc_sprite = None
 
         #set background color
         arcade.set_background_color(arcade.color.AMAZON)
-
+        self.dialogue_active = False
+  
+        
     def setup(self):
         ''' set up game, init variables '''
 
         # Sprite Lists
         self.player_list = arcade.SpriteList()
+        self.npc_list = arcade.SpriteList()
 
         #set up player 
         self.player_sprite = Player(":resources:images/animated_characters/female_person/femalePerson_idle.png", SPRITE_SCALING)
+
+          # Create the enemy
+        self.enemy = arcade.Sprite(":resources:images/animated_characters/robot/robot_idle.png", SPRITE_SCALING_ENEMY )
+        
+        self.enemy.center_y = 400
+        self.enemy.center_x = 700
+        self.npc_list.append(self.enemy)
 
         self.player_sprite.center_x = 50
         self.player_sprite.center_y = 50
@@ -63,16 +78,22 @@ class MyGame(arcade.Window):
 
     def on_draw(self):
         """ rendering """ 
+       
 
         """ this line need to be here before any rendering happens """
         self.clear()
 
         # now we can draw the sprites
         # we only have 1 sprite so thats all we can draw rn 
-        self.player_list.draw()                             
+        self.npc_list.draw()
+        self.player_list.draw()    
+        if self.dialogue_active:
+         self.draw_dialogue_box()                         
 
     def on_update(self, delta_time):
         """ updates game logic"""
+        if self.check_enemy_collision():
+            self.dialogue_active = True
 
         # updates player movement
         self.player_list.update()
@@ -101,6 +122,23 @@ class MyGame(arcade.Window):
         elif key == arcade.key.LEFT or key == arcade.key.RIGHT:
             self.player_sprite.change_x = 0
 
+    def check_enemy_collision(self):
+        player_radius = 25
+        distance_x = abs(self.player_sprite.center_x - self.enemy.center_x)
+        distance_y = abs(self.player_sprite.center_y - self.enemy.center_y)
+        combined_radius = player_radius + 25
+
+        if distance_x < combined_radius and distance_y < combined_radius:
+            return True
+        else:
+            return False
+        
+    def draw_dialogue_box(self):
+        text = "test"
+
+        arcade.draw_rectangle_filled(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 500, 200, arcade.color.WHITE)
+        arcade.draw_text(text, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2+ 20, arcade.color.BLACK, font_size=16, anchor_x="center", anchor_y="center")
+
 """ main function """
 def main():
     window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
@@ -109,3 +147,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+    # end
