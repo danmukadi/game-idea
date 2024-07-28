@@ -2,14 +2,16 @@
 ## main page 1 
 
 import arcade
+from pyglet.gl import glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_NEAREST
 
 # our constants 
-SPRITE_SCALING = 0.5
+SPRITE_SCALING = 2.3
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600 
 SCREEN_TITLE = "Meribia"
-MOVEMENT_SPEED = 5 
+MOVEMENT_SPEED = 2 
 SPRITE_SCALING_ENEMY = 0.5
+MINIMAP_SCALE = 0.2
 
 class Player(arcade.Sprite):
     '''Player Class'''
@@ -30,8 +32,6 @@ class Player(arcade.Sprite):
             self.bottom = 0
         elif self.top > SCREEN_HEIGHT - 1:
             self.top = SCREEN_HEIGHT - 1
-
-
 
 
 class MyGame(arcade.Window):
@@ -62,8 +62,21 @@ class MyGame(arcade.Window):
         self.player_list = arcade.SpriteList()
         self.npc_list = arcade.SpriteList()
 
+       
+
         #set up player 
-        self.player_sprite = Player(":resources:images/animated_characters/female_person/femalePerson_idle.png", SPRITE_SCALING)
+        self.player_sprite = arcade.AnimatedTimeBasedSprite(scale=SPRITE_SCALING)
+        self.player_sprite.frames = []
+
+        for i in range(4): 
+            texture = arcade.load_texture("sprites/MC1.png", x=i*32, y=0, width=32, height=32)
+            anim = arcade.AnimationKeyframe(i, 180, texture)
+            self.player_sprite.frames.append(anim)
+
+
+        # Set initial texture
+        self.player_sprite.texture = self.player_sprite.frames[0].texture
+
 
           # Create the enemy
         self.enemy = arcade.Sprite(":resources:images/animated_characters/robot/robot_idle.png", SPRITE_SCALING_ENEMY )
@@ -86,7 +99,8 @@ class MyGame(arcade.Window):
         # now we can draw the sprites
         # we only have 1 sprite so thats all we can draw rn 
         self.npc_list.draw()
-        self.player_list.draw()    
+        self.player_list.draw()  
+          
         if self.dialogue_active:
          self.draw_dialogue_box()                         
 
@@ -95,8 +109,35 @@ class MyGame(arcade.Window):
         if self.check_enemy_collision():
             self.dialogue_active = True
 
-        # updates player movement
+        self.player_sprite.center_x += self.player_sprite.change_x
+        self.player_sprite.center_y += self.player_sprite.change_y
+
+        #checking for OOB
+        if self.player_sprite.left < 0:
+            self.player_sprite.left = 0
+        elif self.player_sprite.right > SCREEN_WIDTH - 1:
+            self.player_sprite.right = SCREEN_WIDTH - 1
+
+        if self.player_sprite.bottom < 0:
+            self.player_sprite.bottom = 0
+        elif self.player_sprite.top > SCREEN_HEIGHT - 1:
+            self.player_sprite.top = SCREEN_HEIGHT - 1
+
+        # updates player animation 
+        self.player_list.update_animation()
+
+        #updates player movement 
         self.player_list.update()
+
+
+    ''' 
+    We need this because the screen isnt adjusted to sprites with lesser pixels, forcing us to scale the pixels up 
+    we lose resolution doing this and they come out blurry. We need to create a minimap that allows us to display 
+    32x32 or bigger in better resolution than the deafult 
+    '''
+    def draw_minimap(self):
+      pass
+
 
     def on_key_press(self, key, mods):
         """ this function is called whenever a key is pressed """
