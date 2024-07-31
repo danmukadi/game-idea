@@ -5,9 +5,9 @@ import arcade
 from pyglet.gl import glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_NEAREST
 
 # our constants 
-SPRITE_SCALING = 2.3
+SPRITE_SCALING = 2.5
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600 
+SCREEN_HEIGHT = 500 
 SCREEN_TITLE = "Meribia"
 MOVEMENT_SPEED = 2 
 SPRITE_SCALING_ENEMY = 0.5
@@ -79,7 +79,7 @@ class MyGame(arcade.Window):
 
 
           # Create the enemy
-        self.enemy = arcade.Sprite(":resources:images/animated_characters/robot/robot_idle.png", SPRITE_SCALING_ENEMY )
+        self.enemy = arcade.Sprite("sprites/MC2-EX2.png", SPRITE_SCALING )
         
         self.enemy.center_y = 400
         self.enemy.center_x = 700
