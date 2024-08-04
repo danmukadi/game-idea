@@ -8,40 +8,51 @@ from pyglet.gl import glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_
 SPRITE_SCALING = 2.5
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 500 
-SCREEN_TITLE = "Meribia"
+SCREEN_TITLE = "Mythril"
 MOVEMENT_SPEED = 2 
 SPRITE_SCALING_ENEMY = 0.5
 MINIMAP_SCALE = 0.2
 
-class Player(arcade.Sprite):
-    '''Player Class'''
 
-    def update(self):
-        '''Move player'''
-        # add physics engine later 
-        self.center_x += self.change_x
-        self.center_y += self.change_y
+class PauseView(arcade.View):
+    def __init__(self, game_view):
+        super().__init__()
+        self.game_view = game_view
 
-        #checking for OOB
-        if self.left < 0:
-            self.left = 0
-        elif self.right > SCREEN_WIDTH - 1:
-            self.right = SCREEN_WIDTH - 1
+    def on_show_view(self):
+        arcade.set_background_color(arcade.color.ORANGE)
 
-        if self.bottom < 0:
-            self.bottom = 0
-        elif self.top > SCREEN_HEIGHT - 1:
-            self.top = SCREEN_HEIGHT - 1
+    def on_draw(self):
+        self.clear()
+        #Draw player, for effect, on pause screen
+        #The previous View (gameview) was passed in
+        #and saved in self.game_view
+        player_sprite = self.game_view.player_sprite
+        player_sprite.draw()
+        #draw orange filter over him
+        arcade.draw_lrtb_rectangle_filled(left=player_sprite.left, right=player_sprite.right, top=player_sprite.top, bottom=player_sprite.bottom, color=arcade.color.ORANGE+(200,))
+        
+        arcade.draw_text("Press ESC to return", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.BLACK, font_size = 20, anchor_x="center")
+        
+        arcade.draw_text("Press Enter to reset", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 30, arcade.color.BLACK, font_size = 20, anchor_x="center")
+    
+    def on_key_press(self, key, _modifiers):
+        if key == arcade.key.ESCAPE: #resume game
+            self.window.show_view(self.game_view)
+        elif key == arcade.key.ENTER:
+            game = GameView()
+            self.window.show_view(game)
 
 
-class MyGame(arcade.Window):
+
+class GameView(arcade.View):
     """
     Main application
     """
 
-    def __init__(self, width, height, title):
+    def __init__(self):
         #call parent class initializer 
-        super().__init__(width, height, title)
+        super().__init__()
 
         #variables that hold sprites 
         self.player_list = None
@@ -53,9 +64,40 @@ class MyGame(arcade.Window):
         #set background color
         arcade.set_background_color(arcade.color.AMAZON)
         self.dialogue_active = False
-  
+
+        ''' 
+        set up game, init variables 
+        '''
+
+        # Sprite Lists
+        self.player_list = arcade.SpriteList()
+        self.npc_list = arcade.SpriteList()
+
+        #set up player 
+        self.player_sprite = arcade.AnimatedTimeBasedSprite(scale=SPRITE_SCALING)
+        self.player_sprite.frames = []
+
+        for i in range(4): 
+            texture = arcade.load_texture("sprites/MC1.png", x=i*32, y=0, width=32, height=32)
+            anim = arcade.AnimationKeyframe(i, 180, texture)
+            self.player_sprite.frames.append(anim)
+
+
+        # Set initial texture
+        self.player_sprite.texture = self.player_sprite.frames[0].texture
+
+
+          # Create the enemy
+        self.enemy = arcade.Sprite("sprites/MC2-EX2.png", SPRITE_SCALING )
         
-    def setup(self):
+        self.enemy.center_y = 400
+        self.enemy.center_x = 700
+        self.npc_list.append(self.enemy)
+
+        self.player_sprite.center_x = 50
+        self.player_sprite.center_y = 50
+        self.player_list.append(self.player_sprite) 
+        
         ''' set up game, init variables '''
 
         # Sprite Lists
@@ -88,6 +130,8 @@ class MyGame(arcade.Window):
         self.player_sprite.center_x = 50
         self.player_sprite.center_y = 50
         self.player_list.append(self.player_sprite)
+  
+       
 
     def on_draw(self):
         """ rendering """ 
@@ -152,6 +196,9 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = -MOVEMENT_SPEED
         elif key == arcade.key.RIGHT:
             self.player_sprite.change_x = MOVEMENT_SPEED
+        elif key == arcade.key.ESCAPE:
+            pause = PauseView(self)
+            self.window.show_view(pause)
 
     def on_key_release(self, key, mods):
         """ callled when key is released from being pressed """ 
@@ -182,8 +229,9 @@ class MyGame(arcade.Window):
 
 """ main function """
 def main():
-    window = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    window.setup()
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    game = GameView()
+    window.show_view(game)
     arcade.run()
 
 if __name__ == '__main__':
