@@ -12,6 +12,7 @@ SCREEN_TITLE = "Meribia"
 MOVEMENT_SPEED = 2 
 SPRITE_SCALING_ENEMY = 0.5
 MINIMAP_SCALE = 0.2
+MUSIC_VOLUME = 0.5
 
 class Player(arcade.Sprite):
     '''Player Class'''
@@ -68,10 +69,20 @@ class MyGame(arcade.Window):
         self.player_sprite = arcade.AnimatedTimeBasedSprite(scale=SPRITE_SCALING)
         self.player_sprite.frames = []
 
+        
         for i in range(4): 
             texture = arcade.load_texture("sprites/MC1.png", x=i*32, y=0, width=32, height=32)
             anim = arcade.AnimationKeyframe(i, 180, texture)
             self.player_sprite.frames.append(anim)
+
+        if self.player_sprite.change_x < 0:
+            for i in range(4): 
+                texture = arcade.load_texture("sprites/MC-1-final.png", x=i*32, y=2*32, width=32, height=32)
+                anim = arcade.AnimationKeyframe(i+8, 180, texture)
+                self.player_sprite.frames.append(anim)
+
+            self.player_sprite.texture = self.player_sprite.frames[8].texture
+
 
 
         # Set initial texture
