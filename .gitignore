@@ -1,6 +1,6 @@
 # files to ignore when sending over to git 
 
-venv/
+.venv/
 
 .git/
 DS_Store/

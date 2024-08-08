@@ -3,16 +3,58 @@
 
 import arcade
 from pyglet.gl import glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_NEAREST
+import time
 
 # our constants 
 SPRITE_SCALING = 2.5
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 500 
+SCREEN_HEIGHT = 600 
 SCREEN_TITLE = "Mythril"
 MOVEMENT_SPEED = 2 
 SPRITE_SCALING_ENEMY = 0.5
 MINIMAP_SCALE = 0.2
-MUSIC_VOLUME = 0.5
+MUSIC_VOLUME = 0.1
+
+class BGMusicPlayer():
+    def __init__(self):
+        super().__init__()
+
+        self.music_list = []
+        self.current_song_index = 0
+        self.current_player = None
+        self.music = None
+
+    def advance_song(self):
+        # advances pointer to the next song only 
+        self.current_song_index += 1
+        # this will loop it if it gets out of bounds
+        if self.current_song_index >= len(self.music_list):
+            self.current_song_index = 0
+
+    def play_song(self):
+        # this fiunction plays the song
+        if self.music:
+            self.music.stop()
+
+        # plays the next song
+        self.music = arcade.Sound(self.music_list[self.current_song_index], streaming=True)
+        self.current_player = self.music.play(MUSIC_VOLUME, 0, True)
+        # need a quick delay otherwise elapsed time is 0.0
+        time.sleep(0.03)
+
+    def setup(self):
+        # our list of music 
+        self.music_list = ['bg/bistro-pierre-bg.wav']
+        self.current_song_index = 0
+        self.play_song()
+
+    def on_update(self, dt):
+       if self.music and self.current_player:
+            position = self.music.get_stream_position(self.current_player)
+            # Reset pointer to 0 after song finishes
+            if position == 0.0:
+                self.advance_song()
+                self.play_song()
 
 
 class PauseView(arcade.View):
@@ -22,6 +64,8 @@ class PauseView(arcade.View):
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.ORANGE)
+
+    
 
     def on_draw(self):
         self.clear()
@@ -58,17 +102,21 @@ class GameView(arcade.View):
         #variables that hold sprites 
         self.player_list = None
 
+        self.music_player = BGMusicPlayer()
+
         #player info
         self.player_sprite = None
         self.npc_sprite = None
 
         #set background color
-        arcade.set_background_color(arcade.color.AMAZON)
+        arcade.set_background_color(arcade.color.BUD_GREEN)
         self.dialogue_active = False
 
         ''' 
         set up game, init variables 
         '''
+
+        self.music_player.setup()
 
         # Sprite Lists
         self.player_list = arcade.SpriteList()
@@ -80,6 +128,7 @@ class GameView(arcade.View):
 
         for i in range(4): 
             texture = arcade.load_texture("sprites/MC1.png", x=i*32, y=0, width=32, height=32)
+            texture.image = texture.image.convert("RGBA")
             anim = arcade.AnimationKeyframe(i, 180, texture)
             self.player_sprite.frames.append(anim)
 
@@ -151,6 +200,8 @@ class GameView(arcade.View):
         """ this line need to be here before any rendering happens """
         self.clear()
 
+       
+
         # now we can draw the sprites
         # we only have 1 sprite so thats all we can draw rn 
         self.npc_list.draw()
@@ -178,11 +229,14 @@ class GameView(arcade.View):
         elif self.player_sprite.top > SCREEN_HEIGHT - 1:
             self.player_sprite.top = SCREEN_HEIGHT - 1
 
+        self.music_player.on_update(delta_time)
+
         # updates player animation 
         self.player_list.update_animation()
 
         #updates player movement 
         self.player_list.update()
+
 
 
     ''' 
@@ -233,7 +287,7 @@ class GameView(arcade.View):
             return False
         
     def draw_dialogue_box(self):
-        text = "test"
+        text = "Music finally works, now to just work on sprites..."
 
         arcade.draw_rectangle_filled(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 500, 200, arcade.color.WHITE)
         arcade.draw_text(text, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2+ 20, arcade.color.BLACK, font_size=16, anchor_x="center", anchor_y="center")
